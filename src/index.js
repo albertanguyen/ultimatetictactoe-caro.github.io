@@ -30,6 +30,7 @@ class Board extends Component {
         this.state = {
             squares: Array(9).fill(null),
             XisNext: true,
+
         }
     }
 
@@ -64,14 +65,14 @@ class Board extends Component {
                 return array[loc2];
 
         }
-    }
         // indexCombination.forEach( element => {
-            // const [loc1, loc2, loc3 ] = element // loc1, loc2, loc3 are the indices of X or O on the canvas/board
-            
-            // if ( array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
-            //     return array[loc2];
+        //     const [loc1, loc2, loc3 ] = element // loc1, loc2, loc3 are the indices of X or O on the canvas/board
+
+        //     if ( array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
+        //          winner = array[loc2];
         //     }
         // });
+    }
 
         return null;
     }
@@ -86,7 +87,6 @@ class Board extends Component {
 
     render() {
         const winner = this.calculateWinner(this.state.squares);
-        console.log(winner)
         let status;
         if (winner) {
             status = 'Winner is ' + winner;
@@ -98,7 +98,6 @@ class Board extends Component {
         return (
             <div>
                 <div className="status">{status}</div>
-                <div className="status">{winner}</div>
 
                 <div className="board-row">
                     {this.renderSquare(0)}
