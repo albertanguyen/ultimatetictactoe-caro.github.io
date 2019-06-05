@@ -57,13 +57,21 @@ class Board extends Component {
             [6,7,8]
         ]
 
-        indexCombination.forEach( element => {
-            const [loc1, loc2, loc3 ] = element // loc1, loc2, loc3 are the indices of X or O on the canvas/board
-            
-            if ( array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
+        for (let i = 0; i < indexCombination.length; i++) {
+            const [loc1, loc2, loc3] = indexCombination[i] // loc1, loc2, loc3 are the indices of X or O on the canvas/board
+
+            if (array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
                 return array[loc2];
-            }
-        });
+
+        }
+    }
+        // indexCombination.forEach( element => {
+            // const [loc1, loc2, loc3 ] = element // loc1, loc2, loc3 are the indices of X or O on the canvas/board
+            
+            // if ( array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
+            //     return array[loc2];
+        //     }
+        // });
 
         return null;
     }
