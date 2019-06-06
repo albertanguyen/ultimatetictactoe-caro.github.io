@@ -27,6 +27,7 @@ const Square = ({ getValue, onClick }) => (
 
 class Board extends Component {
     renderSquare(i) {
+        
 
         return <Square
             getValue={this.props.squares[i]}
@@ -37,6 +38,7 @@ class Board extends Component {
     render() {
         return (
             <div>
+                <div>Timer: {this.props.timer}</div>
                 <div className="status">{this.props.status}</div>
                 <div className="board-row">
                     {this.renderSquare(0)}
@@ -65,19 +67,35 @@ class Game extends Component {
             squares: Array(9).fill(null),
             XisNext: true,
             isLoggedin: false,
-            userName: ''
+            userName: '',
+            highScores: [],
+            score: 0
         }
+    }
+
+
+    componentDidMount() {
+        this.highScores()
     }
 
     tictactoeHandle(i) {
         const squareclone = this.state.squares.slice();
-        if (this.calculateWinner(this.state.squares) || this.state.squares[i]) {
+
+        if (!this.state.squares.some(square => square !== null)) {
+           this.timer = setInterval(() =>
+                this.setState(
+                    { score: this.state.score + 1 }
+                ),
+                1000)
+        }
+           
+        if (this.calculateWinner(squareclone) || squareclone[i]){
             return;
         }
         squareclone[i] = this.state.XisNext ? 'X' : 'O';
         this.setState({
             squares: squareclone,
-            XisNext: !this.state.XisNext
+            XisNext: !this.state.XisNext,
         });
     }
 
@@ -98,50 +116,28 @@ class Game extends Component {
 
             if (array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
                 return array[loc2];
-
             }
-            // indexCombination.forEach( element => {
-            //     const [loc1, loc2, loc3 ] = element // loc1, loc2, loc3 are the indices of X or O on the canvas/board
-
-            //     if ( array[loc1] && array[loc1] === array[loc2] && array[loc2] === array[loc3]) {
-            //          winner = array[loc2];
-            //     }
-            // });
         }
 
         return null;
     }
 
     responseFacebook(res) {
-        if (this.state.isLoggedin === true) {
-            this.setState(
+        this.setState(
                 {
-                    userName: res.name
+                    userName: res.name,
+                    isLoggedin: true
                 }
             )
-        }
     }
 
-    LoginHandle() {
-        this.setState(
-            {
-                isLoggedin: true
-            }
-        )
-    }
 
-    // showHandle() {
-        
-    // }
-
-    renderFacebook() {
+    renderLoginBtn() {
         return(
             <FacebookLogin
-                autoLoad={true}
                 appId="2451290521766300"
                 fields={this.state.userName}
                 textButton="Login with Tictactoe"
-                onClick={() => this.LoginHandle()}
                 callback={(res) => this.responseFacebook(res)}
             />
         )
@@ -154,30 +150,77 @@ class Game extends Component {
                     <Board
                         status={status}
                         squares={this.state.squares}
-                        tictactoeHandle={this.tictactoeHandle}
+                        tictactoeHandle={(i) => this.tictactoeHandle(i)}
+                        timer = {this.state.score}
+                        highScores = {this.state.highScores}
                     />
                 </div>
                 <div className="game-info">
                     <div>Player: {this.state.userName}</div>
-                    <ol>{/* TODO */}</ol>
+                    <ol>
+                        {this.renderHighscores()}
+                    </ol>
                 </div>
             </div>
         );
     }
 
+    renderHighscores() {
+        return this.state.highScores.map(element => {
+            return (
+                <li>{element.player} wins in {element.score}</li>
+            )
+        })
+    }
+
+    async writeData() {
+        let data = new URLSearchParams();
+        data.append('player', this.state.userName);
+        data.append('score', this.state.score);
+        const url = `http://ftw-highscores.herokuapp.com/tictactoe-dev`;
+        await fetch(url,
+            {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: data.toString(),
+                json: true,
+            }
+        );
+    }
+
+
+    async highScores() {
+        let url = 'http://ftw-highscores.herokuapp.com/tictactoe-dev'
+        const req = await fetch(url)
+        const jsonData = await req.json()
+
+        this.setState(
+            { highScores: jsonData.items}
+        )
+    }
 
     render() {
         const winner = this.calculateWinner(this.state.squares);
+        const draw = this.state.squares.every(square => square !== null)
         let status;
 
         if (winner) {
             status = 'Winner is ' + winner;
-        } else {
+            clearTimeout(this.timer)
+            this.writeData()
+        } 
+        else if (draw) {
+            status = 'It is a draw';
+            clearTimeout(this.timer)
+        }
+        else {
             status = 'Next player is ' + (this.state.XisNext ? 'X' : 'O');
         }
 
         if (!this.state.isLoggedin) {
-            return this.renderFacebook();
+            return this.renderLoginBtn();
         } 
         if (this.state.isLoggedin) {
             return this.renderBoard(status);
